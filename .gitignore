@@ -1,0 +1,11 @@
+# Env variables
+.env
+
+# VS Code settings
+.vscode/
+
+# Ignore everything in data
+data/*
+
+# But do not ignore this file
+!data/load_gaia.ipynb
