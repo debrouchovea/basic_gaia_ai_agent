@@ -17,3 +17,8 @@ downloads/*
 downloads_folder/*
 
 output/*
+
+.ipynb_checkpoints
+**/.ipynb_checkpoints/
+
+*.ipynb filter=strip-notebook-output
