@@ -25,7 +25,7 @@ from langchain.schema import SystemMessage, HumanMessage
 from langchain.agents import AgentExecutor
 # from langchain.prompts import PromptTemplate
 from langchain_core.prompts import PromptTemplate
-from text_web_browser import (
+from tools.text_web_browser import (
     ArchiveSearchTool,
     FinderTool,
     FindNextTool,
@@ -37,8 +37,8 @@ from text_web_browser import (
 from langchain_community.utilities import GoogleSerperAPIWrapper
 from langchain.chat_models import init_chat_model
 
-from text_inspector_tool import TextInspectorTool
-from visual_qa import VisualQATool
+from tools.text_inspector_tool import TextInspectorTool
+from tools.visual_qa import VisualQATool
 
 load_dotenv()
 
@@ -47,35 +47,8 @@ load_dotenv()
 ##############
 
 # SEARCH TOOL
-web_search_tool = TavilySearch(max_results=3, search_depth = 'advanced')
-search_searx = SearxSearchWrapper(searx_host="http://127.0.0.1:8888")
-
-
-# CALCULATOR TOOL
-@tool
-def add(a: float, b: float):
-    """Add two numbers."""
-    return a + b
-
-@tool
-def subtract(a: int, b: int) -> int:
-    """Subtract two numbers.
-    
-    Args:
-        a: first int
-        b: second int
-    """
-    return a - b
-
-@tool
-def multiply(a: float, b: float):
-    """Multiply two numbers."""
-    return a * b
-
-@tool
-def divide(a: float, b: float):
-    """Divide two numbers."""
-    return a / b
+# web_search_tool = TavilySearch(max_results=3, search_depth = 'advanced')
+# search_searx = SearxSearchWrapper(searx_host="http://127.0.0.1:8888")
 
 python_repl_tool = PythonREPLTool()
 
@@ -84,7 +57,7 @@ python_repl_tool = PythonREPLTool()
 ###############
     
 def create_supervisor_agent(llm, tools = []):
-    # Define the system prompt guiding the agent's behavior
+
 
     # Create the ReAct agent
     supervisor_agent = create_react_agent(
@@ -116,9 +89,17 @@ def create_supervisor_agent(llm, tools = []):
             The instruction is only a single step of a plan that solves a bigger problem. You should not return the final answer.\n
             Your task is only to answer to the instruction given to you. You shouldn't add other text than the answer.\n
             The final goal of the plan is to solve the following question: \n
-            {question}\n
-            The previous steps of the plan that have already been solved and their answers :\n
+            {question}\n"""
+        
+        if len(previous_steps_with_answers) > 0:
+            human_message += f"""
+            You have already executed some steps of the plan. \n
+            You can consider the previous steps and their answers when executing the current step.\n
+            The previous instructions of the plan that have already been solved and their answers :\n
             {previous_steps_with_answers}\n
+            """
+
+        human_message += f"""
             You need to solve this instruction: {current_step}\n
             """
 
@@ -126,16 +107,16 @@ def create_supervisor_agent(llm, tools = []):
             SystemMessage(content=prompt),
             HumanMessage(content=human_message)
         ]}
-        # print('SUPERVISOR AGENT')
+
         output = supervisor_agent.invoke(
             input_message, 
         )
-        # print('output', output)
+
         # Access intermediate steps
         intermediate_steps = output.get("intermediate_steps", [])
         for step in intermediate_steps:
             print(step)
-        # print('EXECUTION output', output)
+        print('Agent executed step:', output)
         result = output["messages"][-1].content
         new_response = state["intermediate_responses"] + [result]
         new_step = state["current_step"] + 1
@@ -356,10 +337,6 @@ def create_plan_and_execute_agent(
 
     tools = [
         google_search_tool,
-        add,
-        subtract,
-        multiply,
-        divide,
         python_repl_tool,
         VisitTool(browser=browser),
         PageUpTool(browser),

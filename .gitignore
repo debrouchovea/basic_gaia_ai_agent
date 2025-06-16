@@ -6,6 +6,8 @@
 
 # Ignore everything in data
 data/*
-
-# But do not ignore this file
 !data/load_gaia.ipynb
+
+tools/__pycache__
+
+.DS_Store

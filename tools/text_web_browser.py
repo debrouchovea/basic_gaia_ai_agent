@@ -18,8 +18,8 @@ from serpapi import GoogleSearch
 
 from smolagents import Tool
 
-from cookies import COOKIES
-from mdconvert import FileConversionException, MarkdownConverter, UnsupportedFormatException
+from tools.cookies import COOKIES
+from tools.mdconvert import FileConversionException, MarkdownConverter, UnsupportedFormatException
 from langchain_core.tools import BaseTool
 from langchain_core.tools.base import ArgsSchema
 from pydantic import BaseModel, Field, PrivateAttr

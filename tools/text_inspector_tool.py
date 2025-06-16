@@ -31,7 +31,7 @@ and other text files. DOES NOT HANDLE IMAGES."""
         self._text_limit = text_limit
         
         # Assuming MarkdownConverter is available in your environment
-        from mdconvert import MarkdownConverter  
+        from tools.mdconvert import MarkdownConverter  
         self._md_converter = MarkdownConverter()
 
     def _run(self, file_path: str, question: Optional[str] = None) -> str:
