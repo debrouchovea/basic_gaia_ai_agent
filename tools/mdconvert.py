@@ -182,7 +182,6 @@ class PlainTextConverter(DocumentConverter):
         # Only accept text files
         if content_type is None:
             return None
-        print('PlainTextConverter', local_path)
         # elif "text/" not in content_type.lower():
         #     return None
 
@@ -193,7 +192,6 @@ class PlainTextConverter(DocumentConverter):
             title=None,
             text_content=text_content,
         )
-        print(result)
         return result
 
 
@@ -207,14 +205,12 @@ class HtmlConverter(DocumentConverter):
         # print('fileextension', extension)
         if extension.lower() not in [".html", ".htm"]:
             return None
-        print('HtmlConverter', local_path)
         result = None
         # print('tryy to open')
         # print('local path', local_path)
         with open(local_path, "rt", encoding="utf-8") as fh:
             # print('FH', fh)
             result = self._convert(fh.read())
-        print( result)
         return result
 
     def _convert(self, html_content: str) -> None | DocumentConverterResult:
@@ -593,7 +589,6 @@ class WavConverter(MediaConverter):
     """
 
     def convert(self, local_path, **kwargs) -> None | DocumentConverterResult:
-        print('WAV Converter', local_path)
         # Bail if not a XLSX
         extension = kwargs.get("file_extension", "")
         if extension.lower() != ".wav":
@@ -650,8 +645,6 @@ class Mp3Converter(WavConverter):
         extension = kwargs.get("file_extension", "")
         if extension.lower() not in [".mp3", ".m4a"]:
             return None
-        print('MP3 Converter')
-        print('local path', local_path)
 
         md_content = ""
 
@@ -753,7 +746,6 @@ class ZipConverter(DocumentConverter):
             md_content += f"* {file}\n"
 
         result =  DocumentConverterResult(title="Extracted Files", text_content=md_content.strip())
-        print(result)
         return result
     
 class ImageConverter(MediaConverter):
@@ -803,7 +795,6 @@ class ImageConverter(MediaConverter):
             title=None,
             text_content=md_content,
         )
-        print(result)
         return result
 
     def _get_mlm_description(self, local_path, extension, client, model, prompt=None):

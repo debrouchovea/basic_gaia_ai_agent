@@ -45,7 +45,6 @@ and other text files. DOES NOT HANDLE IMAGES."""
 
         # Handle ZIP files
         if ".zip" in file_path:
-            print('ZIP IN TEXTINEXPECTOR TOOL:',result.text_content)
             return result.text_content
 
         # Return raw content if no question

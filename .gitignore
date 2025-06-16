@@ -11,3 +11,9 @@ data/*
 tools/__pycache__
 
 .DS_Store
+
+downloads/*
+
+downloads_folder/*
+
+output/*

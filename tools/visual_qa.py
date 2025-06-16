@@ -41,7 +41,7 @@ class VisualQATool(BaseTool):
             image_path = self._download_remote_image(image_path)
             
         with open(image_path, "rb") as image_file:
-            print('image_path in _encode_image:', image_path)
+            # print('image_path in _encode_image:', image_path)
             # import os
             # print('filezise', os.path.getsize(image_path))
             # from pathlib import Path
@@ -52,7 +52,7 @@ class VisualQATool(BaseTool):
             # print("Bytes read:", len(raw))
 
             base =  base64.b64encode(image_file.read()).decode("utf-8")
-            print('base in _encode_image:', base)
+            # print('base in _encode_image:', base)
             return base
     def _download_remote_image(self, url: str) -> str:
         """Download remote image to local temp file"""
@@ -97,7 +97,7 @@ class VisualQATool(BaseTool):
                 {"type": "image", "data": base64_image, "mime_type": mime_type},
                 {"type": "text", "text": question},
             ]
-        print('content in visual qa tool:', content)
+        # print('content in visual qa tool:', content)
         # Use the injected LLM
         response = self._llm.invoke(content)
         output = response.content if hasattr(response, "content") else str(response)
