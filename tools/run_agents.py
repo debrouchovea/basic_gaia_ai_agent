@@ -26,7 +26,7 @@ def get_document_description(file_path: str, question: str, document_inspection_
     prompt = f"""Write a caption for this document. Pay special attention to any details that might be useful for someone answering the following question:
 {question}. But do not try to answer the question directly!
 Do not add any information that is not present in the document."""
-    print('document_inspection_tool',document_inspection_tool)
+    # print('document_inspection_tool',document_inspection_tool)
     return document_inspection_tool._run(file_path=file_path, question= prompt) #### CHANGED HERE BUT NOT SURE 
 
 
@@ -38,7 +38,7 @@ def get_single_file_description(file_path: str, question: str, visual_inspection
             f"\n     -> Summarized image description: {get_image_description(file_path, question, visual_inspection_tool)}"
         )
         return file_description
-    elif file_extension in ["pdf", "xls", "xlsx", "docx", "doc", "xml"]:
+    elif file_extension in ["pdf", "xls", "xlsx", "docx", "doc", "xml", "pptx", "txt", "csv"]:
         image_path = file_path.split(".")[0] + ".png"
         if os.path.exists(image_path):
             description = get_image_description(image_path, question, visual_inspection_tool)
@@ -46,7 +46,10 @@ def get_single_file_description(file_path: str, question: str, visual_inspection
         else:
             description = get_document_description(file_path, question, document_inspection_tool)
         file_description = f" - Attached document: {file_path}"
-        file_description += f"\n     -> Summarized file description: {description}"
+        if question is not None:
+            file_description += f"\n     -> Summarized file description: {description}"
+        else: 
+            file_description += f"\n     -> Raw file content: {description}"
         return file_description
     elif file_extension in ["mp3", "m4a", "wav"]:
         return f" - Attached audio filepath: {file_path}"

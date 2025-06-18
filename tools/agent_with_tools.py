@@ -82,7 +82,7 @@ def create_supervisor_agent(llm, tools = []):
     )
 
     def execute_step(state):
-        # print('EXECUTION STEP')
+
         question = state["question"]
         previous_steps_with_answers = "\n".join(
             f"{i}. INSTRUCTION: {state['plan'][i]} ANSWER: {state['intermediate_responses'][i]}" for i in range(len(state['intermediate_responses']))
@@ -123,20 +123,6 @@ def create_supervisor_agent(llm, tools = []):
             input_message, 
         )
 
-        # Access intermediate steps
-        # for msg in output["messages"]:
-        #     for tool_call in getattr(msg, "tool_calls", []):
-        #         name = tool_call["name"]
-        #         args = tool_call["args"]
-        #         print(f"Tool called: {name} with args: {args}")
-        #         # Corresponding tool responses are in separate ToolMessage entries
-        #     if isinstance(msg, ToolMessage):
-        #         print(f"Tool output: {msg.content.strip()}")
-
-        # intermediate_steps = output.get("intermediate_steps", [])
-        # for step in intermediate_steps:
-        #     print(step)
-        # print('Agent executed step:', output)
         result = output["messages"][-1].content
         new_response = state["intermediate_responses"] + [result]
         new_step = state["current_step"] + 1
@@ -159,11 +145,15 @@ def create_planner_agent(llm):
         Break down the following question into small executable steps for an AI Agent. You should consider creating many short steps. 
         Each step should be self explanatory.
         You should not create steps that require reasoning, but rather steps that can be executed by the AI Agent. 
-        You should consider available tools (web search, file processing, code execution).
+        You should consider available tools (web search, file processing, code execution). If the raw content of the file is pared already in your question, you should not ask the AI agent to read the file again, but rather to answer a question about the file.\n
+        In your insctructions, you should add all the information needed to execute the step, so that the AI agent can execute it without any additional information.\n
+        When analysing files, you should not ask the AI agent to just read the file, but rather to answer a question about the file.
         When analysing files, you should not ask the AI agent to just read the file, but rather to answer a question about the file.
         Each step should be simple and easy to follow. List each step on a new line WITHOUT NUMBERING.
         The question is: {state['question']}\n
         Remember, you should not return a numbered list, just return the steps.
+        DO NOT RETURN OTHER TEXT THAN THE STEPS.\n
+        Remember, you should give the AI Agent all the information needed to execute the step, so that it can execute it without any additional information.\n
         """
 
         messages = [
@@ -184,6 +174,10 @@ def create_planner_agent(llm):
 ###############
 def create_replanner_agent(llm):
     def replan_step(state: PlanExecute):
+        # print('Replanning step...')
+        # print(state['plan'])
+        for i in range(len(state['plan'])):
+            state['plan'][i] = state['plan'][i].split("INSTRUCTION: ", 1)[-1]
 
         previous_steps_with_answers = "\n".join(
             f"{i}. INSTRUCTION: {state['plan'][i]} ANSWER: {state['intermediate_responses'][i]}/n" for i in range(len(state['intermediate_responses']))
@@ -191,83 +185,48 @@ def create_replanner_agent(llm):
         future_steps = "\n".join(
             f"{i}. INSTRUCTION: {state['plan'][i]}/n" for i in range(len(state['intermediate_responses']), len(state['plan']))
         )
+        # print('Replanning step...')
+        # print('Previous steps with answers:', previous_steps_with_answers)
+        # print('Future steps:', future_steps)
 
-        # print("REPLANNING inside agent")
-        # print('PRevious steps with answer')
-        # for i in range(len(state['intermediate_responses'])):
-        #     print(f"{i+1}. INSTRUCTION: {state['plan'][i]} ANSWER: {state['intermediate_responses'][i]}")
-        # print('future steps')
-        # for i in range(len(state['intermediate_responses']), len(state['plan'])):
-        #     print(f"{i+1}. INSTRUCTION: {state['plan'][i]}")
-        # print(' ')
-        
         replanner_prompt = f"""
         You are a planning assistant tasked with decomposing complex user requests into a sequence of simple, executable steps for an AI agent. You are the brain that is able to solve very complex problems.\n
-        Some of the steps of the plan has already been executed, and you should only update the future steps of the plan. You should use the information gathered during the previous steps to update the future steps of the plan.
+        Some of the steps of the plan have already been executed, and you should only update the future steps of the plan. You should use the information gathered during the previous steps to update the future steps of the plan.
         """ 
 
         human_message = f"""
         Break down the following question into small executable steps for an AI Agent. You should consider creating many short steps. 
         Each step should be self explanatory.
+        When analysing files, you should not ask the AI agent to just read the file, but rather to answer a question about the file.
         You should not create steps that require reasoning, but rather steps that can be executed by the AI Agent. 
-        You should consider available tools (web search, file processing, code execution).
+        You should consider available tools (web search, file processing, code execution). If the raw content of the file is pared already in your question, you should not ask the AI agent to read the file again, but rather to answer a question about the file.\n
         When analysing files, you should not ask the AI agent to just read the file, but rather to answer a question about the file.
         Each step should be simple and easy to follow. List each step on a new line without numbering.
-
+        In your insctructions, you should add all the information needed to execute the step, so that the AI agent can execute it without any additional information.\n
         The PAST executed steps with their answers are:
         {previous_steps_with_answers} \n\n
         The planned FUTURE steps that are in the plan are, do you think they are still relevant? If not, you should update them:
         {future_steps}\n\n
-        The initial question is: {state['question']}\n
+        The initial question and the attached files are: {state['question']}\n
         You should only update the future steps of the plan, you cannot change the past steps of the plan.
-        If you think that with the information gathered during the previous steps, one can answer the users question, then answer "FINISH".
-        If you think that the future steps are still relevant, then return them as they are.
+        If you think that the future steps are still relevant, then return them as they are. But do not return anything else than the future steps. 
+        If you think that with the information gathered during the previous steps, one can answer the question, then answer "FINISH". Don't forget to finish your answer with "FINISH" if you think that the plan is finished and the question can be answered.\n
+        DO NOT RETURN OTHER TEXT THAN THE STEPS, only if you think that all the information gathered during the previous steps is enough to answer the question, then you can return "FINISH".\n
+        Remember, you should give the AI Agent all the information needed to execute the step, so that it can execute it without any additional information.\n
         """
-
-
-        # question = state['question']
-        
-        # replanner_prompt = f""" 
-        # You are a planner, and your objective is to develop a plan to solve the users question.
-        # Break down the complex question into small executable steps for an AI Agent. 
-        # For each step, provide a brief description of what needs to be done, there should be enough information to execute the step.
-        # The steps should be simple and easy to follow. Consider required tools (web search, calculator, file processing, code execution)
-        # A plan has already been created, and some steps have been executed. You should only update the future steps of the plan. 
-        # You cannot change the past steps of the plan.
-        # You should NOT return a numbered list. Return only the steps, do not add any other text.
-        # If you think that with the information gathered during the previous steps, one can answer the users question, then answer "FINISH".
-        # """
-
-        # human_message = f"""QUESTION: {question}.\n\n
-
-        # The PAST executed steps with their answers are:
-        # {previous_steps_with_answers} \n\n
-
-        # The planned FUTURE steps that are in the plan are, do you think they are still relevant? If not, you should update them:
-        # {future_steps}\n\n
-        # Remember, don't return a numbered list, just return the steps. 
-        # """
 
         messages = [
             SystemMessage(content=replanner_prompt),
             HumanMessage(content=human_message)
         ]
-        # print('REPLAN STEPS input', messages)
+
         output = llm(messages)
-        # print('REPLAN STEPS output', output)
+
         if "FINISH" in output.content:
-            # print('AGENT FINISHED')
-            # print('output content', output.content)
             return {"agent_finished": True}
         else:
-            # print('CHANGE NEEDED')
-            # print('output content', output.content)
             plan_list = [step.strip() for step in output.content.split("\n") if step.strip()]
             updated_plan = state['plan'][:len(state['intermediate_responses'])] + plan_list
-            # print('UPDATED PLAN')
-            # for i in range(len(updated_plan)):
-                # print(f"{i+1}. {updated_plan[i]}")
-            # print(' ')
             return {"plan": updated_plan}
     return replan_step
 
@@ -276,16 +235,12 @@ def create_replanner_agent(llm):
 ################
 def create_answer_agent(llm):
     def answer_step(state: PlanExecute):
-        # print("ANSWERING")
-        # print('PRevious steps with answer')
-        # for i in range(len(state['intermediate_responses'])):
-        #     print(f"{i+1}. INSTRUCTION: {state['plan'][i]} ANSWER: {state['intermediate_responses'][i]}")
 
         question = state['question']
         previous_steps_with_answers = "\n".join(
-            f"{i}. PAST INSTRUCTION: {state['plan'][i]}. ANSWER: {state['intermediate_responses'][i]}" for i in range(len(state['intermediate_responses']))
+            f"{i}. INSTRUCTION: {state['plan'][i]} ANSWER: {state['intermediate_responses'][i]}/n" for i in range(len(state['intermediate_responses']))
         )
-        answer_prompt = f""" You are an answer agent. Your role is to provide the final answer to the question based on the previous tasks and their answers. \n
+        answer_prompt = f""" You are an answer agent. Your role is to provide the final answer to the question based on the previous instructions and their answers. \n
                         You will find the answer to the question in the previous steps and their answers. You should certainly have a look at the last steps.\n
 
                         Finish your answer with the following template: 
@@ -295,10 +250,11 @@ def create_answer_agent(llm):
                         """  
 
         human_message = f"""
-        The initial question is: {question}.\n\n
+        The question that you are solving is: {question}.\n\n
 
         The executed steps with their answers are:
         {previous_steps_with_answers} \n\n
+        You should use the information gathered during the previous steps to answer the question.\n
         Remember, you should only return the final answer to the question, do not add any other text. Use the template: FINAL ANSWER: [YOUR FINAL ANSWER].
         """
 
@@ -307,9 +263,7 @@ def create_answer_agent(llm):
             HumanMessage(content=human_message)
         ]
 
-        # print('ANSWER STEPS input', messages)
         output = llm(messages)
-        # print('ANSWER STEPS output', output)
         
         return {"response": output.content}
     return answer_step
@@ -346,7 +300,6 @@ def create_plan_and_execute_agent(
     }
     os.makedirs(f"./{BROWSER_CONFIG['downloads_folder']}", exist_ok=True)
     browser = SimpleTextBrowser(**BROWSER_CONFIG)
-
     tools = [
         google_search_tool,
         python_repl_tool,
@@ -358,7 +311,7 @@ def create_plan_and_execute_agent(
         ArchiveSearchTool(browser),
         TextInspectorTool(
             model=init_chat_model(llm_text_inspector, model_provider="openai", temperature=0), 
-            text_limit=10000),
+            text_limit=1000000),
         VisualQATool(model=init_chat_model(llm_visual_qa, model_provider="openai", temperature=0)),
     ]
 
@@ -433,70 +386,3 @@ def create_plan_and_execute_agent(
     agent = workflow.compile()
 
     return agent
-
-# # test
-# if __name__ == "__main__":
-#     print('Start agent')
-#     # Build the graph
-#     graph = create_plan_and_execute_agent(
-#             llm_name_planner="gpt-4.1-mini",
-#             llm_name_executor="gpt-4.1-mini",
-#             llm_name_replanner="gpt-4.1-mini",
-#             llm_name_answer="gpt-4.1-mini")
-#     print('Graph builded')
-
-#     # Run the graph
-#     question= "What was the complete title of the book in which two James Beard Award winners recommended the restaurant where Ali Khan enjoyed a New Mexican staple in his cost-conscious TV show that started in 2015? Write the numbers in plain text if there are some in the title."
-#     question = "What country had the least number of athletes at the 1928 Summer Olympics? If there's a tie for a number of athletes, return the first in alphabetical order. Give the IOC country code as your answer."
-#     # question = "what is the hometown of the mens 1999 Australia open winner?"
-#     # question = "what is 12034 * 1485033 + 5.2**3 ?"
-#     print('question', question)
-
-#     config = {"recursion_limit": 50}
-#     inputs = {"input": question}
-#     initial_state = {
-#         "question": question,
-#         "plan": [],
-#         "response": "",
-#         "current_step": 0,
-#         "error_count": 0,
-#         "validation": None,
-#         "agent_finished": False
-#     }
-#     initial_state = PlanExecute(
-#         question=question,
-#         plan=[],
-#         intermediate_responses=[],
-#         response="",
-#         current_step=0,
-#         error_count=0,
-#         validation=None,
-#         agent_finished=False
-#     )
-
-#     print('start invoke')
-#     workflow =  graph.invoke(initial_state, config=config)
-
-#     print('workflow', workflow)
-#     print(' ')
-#     print('RESPONSE')
-#     print(workflow["response"])
-#     print(' ')
-
-#     print('PLAN')
-#     print(workflow["plan"])
-#     print(' ')
-
-#     print('STEPS AND ANSWERS')
-#     for i in range(len(workflow["plan"])):
-#         step = workflow["plan"][i]
-#         response = workflow["intermediate_responses"][i]
-#         print(f"{i+1}. INSTRUCTION: {step}. ANSWER: {response}")
-#     print(' ')
-
-#     print('QUESTION')
-#     print(workflow["question"])
-
-#     print(' ')
-#     print('current step')
-#     print(workflow["current_step"])

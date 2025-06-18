@@ -14,7 +14,8 @@ class TextInspectorInput(BaseModel):
 class TextInspectorTool(BaseTool):
     name: str = "inspect_file_as_text"
     description: str = """
-Reads files as markdown text and answers questions about them. Handles: 
+Reads files as markdown text. If a question is asked to the text, then a response will be returned. If there is no question asked, then the file content will be fully retranscribed. 
+Handles: 
 [".html", ".htm", ".xlsx", ".pptx", ".wav", ".mp3", ".m4a", ".flac", ".pdf", ".docx"] 
 and other text files. DOES NOT HANDLE IMAGES."""
     args_schema: type[BaseModel] = TextInspectorInput
