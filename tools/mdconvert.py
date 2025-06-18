@@ -696,7 +696,7 @@ class Mp3Converter(WavConverter):
             title=None,
             text_content=md_content.strip(),
         )
-        print(result)
+        # print(result)
         return result
 
 
@@ -1011,11 +1011,11 @@ class MarkdownConverter:
         # print('CONVERT')
         # print('===============================================================================================')
         # print('===============================================================================================')
-        print('local_path', local_path)
-        print('extensions',extensions)
+        # print('local_path', local_path)
+        # print('extensions',extensions)
         error_trace = ""
         for ext in extensions + [None]:  # Try last with no extension
-            print('ext', ext)
+            # print('ext', ext)
             for converter in self._page_converters:
                 # print('converter',converter)
                 _kwargs = copy.deepcopy(kwargs)
@@ -1038,13 +1038,13 @@ class MarkdownConverter:
                 try:
                     # print('tryyy to convert')
                     res = converter.convert(local_path, **_kwargs)
-                    print('reees res', res)
+                    # print('reees res', res)
                 except Exception as e:
                     
                     print('exception in conversion', e)
                     error_trace = ("\n\n" + traceback.format_exc()).strip()
                     print('error trace', error_trace)
-                    print('res', res)
+                    # print('res', res)
                     continue
                 if res is not None:
                     # Normalize the content

@@ -317,25 +317,21 @@ def create_plan_and_execute_agent(
 
     # Create the LLMs
     llm_executor = ChatOpenAI(
-        temperature=0,
         model=llm_name_executor,
         streaming=True,
         verbose=True,
     )
     llm_planner = ChatOpenAI(
-        temperature=0,
         model=llm_name_planner,
         streaming=True,
         verbose=True,
     )
     llm_replanner = ChatOpenAI(
-        temperature=0,
         model=llm_name_replanner,
         streaming=True,
         verbose=True,
     )
     llm_answer = ChatOpenAI(
-        temperature=0,
         model=llm_name_answer,
         streaming=True,
         verbose=True,
