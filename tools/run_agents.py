@@ -16,7 +16,7 @@ def serialize_agent_error(obj):
 
 
 def get_image_description(file_name: str, question: str, visual_inspection_tool) -> str:
-    prompt = f"""Write a caption of this image. Don't hesitate to be very specific. Pay special attention to any details that might be useful for someone answering the following question:
+    prompt = f"""Write a caption of this image. Don't hesitate to be put a lot of details. Pay special attention to any details that might be useful for someone answering the following question:
 {question}. But do not try to answer the question directly!
 Do not add any information that is not present in the image."""
     return visual_inspection_tool._run(image_path=file_name, question=prompt)

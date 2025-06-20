@@ -145,7 +145,8 @@ def create_planner_agent(llm):
         Break down the following question into small executable steps for an AI Agent. You should consider creating many short steps. 
         Each step should be self explanatory.
         You should not create steps that require reasoning, but rather steps that can be executed by the AI Agent. 
-        You should consider available tools (web search, file processing, code execution). If the raw content of the file is pared already in your question, you should not ask the AI agent to read the file again, but rather to answer a question about the file.\n
+        You should consider available tools (web search, file reading, image viewer, code execution). You shouldn't use code to open images. 
+        If the raw content of the file is already in your question, you should not ask the AI agent to read the file again, but rather to answer a question about the file.\n
         In your insctructions, you should add all the information needed to execute the step, so that the AI agent can execute it without any additional information.\n
         When analysing files, you should not ask the AI agent to just read the file, but rather to answer a question about the file.
         When analysing files, you should not ask the AI agent to just read the file, but rather to answer a question about the file.
@@ -199,7 +200,8 @@ def create_replanner_agent(llm):
         Each step should be self explanatory.
         When analysing files, you should not ask the AI agent to just read the file, but rather to answer a question about the file.
         You should not create steps that require reasoning, but rather steps that can be executed by the AI Agent. 
-        You should consider available tools (web search, file processing, code execution). If the raw content of the file is pared already in your question, you should not ask the AI agent to read the file again, but rather to answer a question about the file.\n
+        You should consider available tools (web search, file reading, image viewer, code execution). You shouldn't use code to open images. 
+        If the raw content of the file is already in your question, you should not ask the AI agent to read the file again, but rather to answer a question about the file.\n
         When analysing files, you should not ask the AI agent to just read the file, but rather to answer a question about the file.
         Each step should be simple and easy to follow. List each step on a new line without numbering.
         In your insctructions, you should add all the information needed to execute the step, so that the AI agent can execute it without any additional information.\n
